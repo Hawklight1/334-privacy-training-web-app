@@ -79,6 +79,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             $_SESSION["loggedin"] = true;
             $_SESSION["id"] = $row["id"];
             $_SESSION["username"] = $row["username"];
+            $_SESSION["display_username"] = $user;
 
             header("location: welcome.php");
             exit;
