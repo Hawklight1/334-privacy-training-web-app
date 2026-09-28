@@ -35,7 +35,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     $user = $_POST['username'];
     $pass = $_POST['password'];
 
-    // Create a PHP variable with a SQL Select statement.
+    // Updated SQL query to parametize inputs and block SQL injection
+    $stmt = $conn->prepare(
+        "SELECT * FROM users_table WHERE username = ? AND password = ?"
+    );
+    $stmt -> bind_param("ss", $user, $pass);
+    $stmt -> execute;
+
     $sql = "SELECT * FROM users_table WHERE username = '$user' and password = '$pass'";
 
     // The mysqli_query() function built into PHP performs a query against a database.
