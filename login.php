@@ -52,7 +52,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     $stmt = $link->prepare(
         "SELECT * FROM users_table WHERE username = ?"
     );
-    $stmt -> bind_param("ss", $user, $pass);
+    $stmt -> bind_param("s", $user);
     $stmt -> execute();
 
     // Updated result to match above code execution
@@ -86,7 +86,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
 
     // Either the username doesn't exist or the password didn't match.
-    $password_err = "The username and/or the password you entered was not valid."
+    $password_err = "The username and/or the password you entered was not valid.";
 
     // Close connection.
     mysqli_close($link);
