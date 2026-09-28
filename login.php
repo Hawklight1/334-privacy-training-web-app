@@ -1,4 +1,14 @@
 <?php
+// Cookie protection
+ini_set('session.use_strict_mode', 1);
+ini_set('session.use_only_cookies', 1);
+
+session_set_cookie_params([
+    'httponly' => true,
+    'secure'   => true,
+    'samesite' => 'Lax'
+]);
+
 // Initialize the session.
 session_start();
 
@@ -36,17 +46,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     $pass = $_POST['password'];
 
     // Updated SQL query to parametize inputs and block SQL injection
-    $stmt = $conn->prepare(
+    $stmt = $link->prepare(
         "SELECT * FROM users_table WHERE username = ? AND password = ?"
     );
     $stmt -> bind_param("ss", $user, $pass);
-    $stmt -> execute;
+    $stmt -> execute();
 
-    $sql = "SELECT * FROM users_table WHERE username = '$user' and password = '$pass'";
-
-    // The mysqli_query() function built into PHP performs a query against a database.
-    // https://www.w3schools.com/php/func_mysqli_query.asp
-	$res = mysqli_query($link, $sql);
+    // Updated result to match above code execution
+	$res = $stmt->get_result();
 
     // The built-in mysqli_stmt_num_rows function accepts a statement 
     // object as a parameter and returns the number of rows in the 
@@ -54,21 +61,22 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     // https://www.tutorialspoint.com/php/php_function_mysqli_stmt_num_rows.htm
     // If the result of the executed SQL statement contains a row,
     // we know that the username and password exists and we can log the user in.
-	if(mysqli_num_rows($res) == 0){
+	if($res->num_rows == 0){
         $password_err = "The username and/or password you entered was not valid.";
     }
     else{
-        // Username and password is correct, so start a new session.
-    		session_start();
 
-    		// Store data in session variables.
-    		$_SESSION["loggedin"] = true;
-    		$_SESSION["id"] = $id;
-    		$_SESSION["username"] = $username;
-    		$_SESSION["display_username"] = $user;
+        $row = $res->fetch_assoc();
 
-    		// Redirect user to welcome page.
-    		header("location: welcome.php");
+        // Give the authenticated user a fresh session ID.
+        session_regenerate_id(true);
+
+        $_SESSION["loggedin"] = true;
+        $_SESSION["id"] = $row["id"];
+        $_SESSION["username"] = $row["username"];
+
+        header("location: welcome.php");
+        exit;
     }
 
     // Close connection.
