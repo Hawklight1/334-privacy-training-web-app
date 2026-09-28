@@ -47,8 +47,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     $pass = $_POST['password'];
 
     // REVISED: Updated SQL query to parametize inputs and block SQL injection
+    // REVISED: 2nd update, added password hashing so we need to verify password
+    //          via php instead of directly quering the DB.
     $stmt = $link->prepare(
-        "SELECT * FROM users_table WHERE username = ? AND password = ?"
+        "SELECT * FROM users_table WHERE username = ?"
     );
     $stmt -> bind_param("ss", $user, $pass);
     $stmt -> execute();
@@ -62,25 +64,29 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     // https://www.tutorialspoint.com/php/php_function_mysqli_stmt_num_rows.htm
     // If the result of the executed SQL statement contains a row,
     // we know that the username and password exists and we can log the user in.
-	if($res->num_rows == 0){
-        $password_err = "The username and/or password you entered was not valid.";
-    }
 
     // REVISED: Forces new session ID on each login to help prevent session hijacking.
-    else{
-
+    // REVISED: 2nd update, added password hashing so need to verify password in this
+    //          stage rather than from our direct DB query earlier.
+    if($res->num_rows===1)
+        {
         $row = $res->fetch_assoc();
 
-        // Give the authenticated user a fresh session ID.
-        session_regenerate_id(true);
+        if(password_verify($pass, $row["password"])) {
+            // Give the authenticated user a fresh session ID.
+            session_regenerate_id(true);
 
-        $_SESSION["loggedin"] = true;
-        $_SESSION["id"] = $row["id"];
-        $_SESSION["username"] = $row["username"];
+            $_SESSION["loggedin"] = true;
+            $_SESSION["id"] = $row["id"];
+            $_SESSION["username"] = $row["username"];
 
-        header("location: welcome.php");
-        exit;
+            header("location: welcome.php");
+            exit;
+        }
     }
+
+    // Either the username doesn't exist or the password didn't match.
+    $password_err = "The username and/or the password you entered was not valid."
 
     // Close connection.
     mysqli_close($link);

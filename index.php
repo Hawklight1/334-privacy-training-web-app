@@ -129,7 +129,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             // Set parameters of the mysqli_stmt_bind_param $param_username and
             // $param_password to the $username and $password, respectively.
             $param_username = $username;
-            $param_password = $password;
+
+            // REVISED: Hash password before storing it in the database. Fixes directly storing passwords.
+            $param_password = password_hash($password, PASSWORD_DEFAULT);
 
             // Attempt to execute the prepared statement with the built-in
             // mysqli_stmt_execute function.
